@@ -1,25 +1,34 @@
 package com.service.student;
 
 import com.model.student.Student;
-import com.repository.grade.GradeRepository;
+import com.repository.student.StudentRepository;
 import com.repository.student.StudentRepository;
 import com.service.AbstractCrudService;
+import com.service.student.StudentService;
 
 import java.util.List;
 import java.util.Optional;
 
 public class StudentService extends AbstractCrudService<Student> {
 
-    StudentRepository studentRepository;
+    private static StudentService instance;
+    private final StudentRepository studentRepository = StudentRepository.getInstance();
 
-    public StudentService(StudentRepository repository) {
-        super(repository);
-        this.studentRepository = repository;
+    public StudentService(){
+        super(StudentRepository.getInstance());
+    }
+
+    public static StudentService getInstance(){
+        if(instance==null){
+            instance = new StudentService();
+        }
+        return instance;
     }
 
     public Student create() {
         return studentRepository.create();
     }
+
     public void save(Student student) {
         studentRepository.save(student);
     }
@@ -44,7 +53,7 @@ public class StudentService extends AbstractCrudService<Student> {
         studentRepository.delete(id);
     }
 
-    public List<Student> findStudentWithGPAHigherThan(double inputGPA, GradeRepository gradeRepository) {
-        return studentRepository.findStudentWithGPAHigherThan(inputGPA, gradeRepository);
+    public List<Student> findStudentWithGPAHigherThan(double inputGPA) {
+        return studentRepository.findStudentWithGPAHigherThan(inputGPA);
     }
 }

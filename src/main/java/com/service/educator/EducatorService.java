@@ -1,7 +1,6 @@
 package com.service.educator;
 
 import com.model.educator.Educator;
-import com.repository.ICrudRepository;
 import com.repository.educator.EducatorRepository;
 import com.service.AbstractCrudService;
 
@@ -10,11 +9,18 @@ import java.util.Optional;
 
 public class EducatorService extends AbstractCrudService<Educator> {
 
-    EducatorRepository educatorRepository;
+    private static EducatorService instance;
+    private final EducatorRepository educatorRepository = EducatorRepository.getInstance();
 
-    protected EducatorService(EducatorRepository repository) {
-        super(repository);
-        this.educatorRepository = repository;
+    public EducatorService(){
+        super(EducatorRepository.getInstance());
+    }
+
+    public static EducatorService getInstance(){
+        if(instance==null){
+            instance = new EducatorService();
+        }
+        return instance;
     }
 
     public void save(Educator educator) {

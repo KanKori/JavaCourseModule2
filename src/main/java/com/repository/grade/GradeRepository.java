@@ -20,24 +20,43 @@ public class GradeRepository implements ICrudRepository<Grade>, IGardeRepository
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GradeRepository.class);
 
+    private static GradeRepository instance;
+
+    protected GradeRepository(GradeRepository instance) {
+        GradeRepository.instance = instance;
+    }
+
+    public static GradeRepository getInstance() {
+        if (instance == null) {
+            instance = new GradeRepository();
+        }
+        return instance;
+    }
+    private Session session;
+
+    public GradeRepository() {
+        HibernateSessionFactoryUtil.getInstance();
+        session = HibernateSessionFactoryUtil.getSession();
+    }
+
     public Grade create(List<Student> studentList, Subject subject, int value) {
         return  new Grade(studentList, subject, value);
     }
     @Override
     public void save(Grade grade) {
-        Session session = sessionFactory.openSession();
+        session = sessionFactory.openSession();
         session.beginTransaction();
-        session.save(grade);
+        session.merge(grade);
         session.getTransaction().commit();
         session.close();
     }
 
     @Override
     public void saveAll(List<Grade> grades) {
-        Session session = sessionFactory.openSession();
+        session = sessionFactory.openSession();
         session.beginTransaction();
         for (Grade grade : grades) {
-            session.save(grade);
+            session.merge(grade);
         }
         session.getTransaction().commit();
         session.close();
@@ -45,7 +64,7 @@ public class GradeRepository implements ICrudRepository<Grade>, IGardeRepository
 
     @Override
     public List<Grade> getAll() {
-        Session session = sessionFactory.openSession();
+        session = sessionFactory.openSession();
         List<Grade> grades = session.createQuery("select grade from Grade grade", Grade.class).getResultList();
         session.close();
         return grades;
@@ -53,7 +72,7 @@ public class GradeRepository implements ICrudRepository<Grade>, IGardeRepository
 
     @Override
     public Optional<Grade> findById(String id) {
-        Session session = sessionFactory.openSession();
+        session = sessionFactory.openSession();
         Optional<Grade> grade = Optional.ofNullable(session.find(Grade.class, id));
         session.close();
         return grade;

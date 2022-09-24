@@ -12,6 +12,7 @@ public class HibernateSessionFactoryUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(HibernateSessionFactoryUtil.class);
     public static SessionFactory sessionFactory;
     private static Session session;
+    private static HibernateSessionFactoryUtil instance;
 
     public static SessionFactory getSessionFactory() {
         if (sessionFactory == null) {
@@ -34,5 +35,12 @@ public class HibernateSessionFactoryUtil {
             session = sessionFactory.openSession();
         }
         return session;
+    }
+
+    public static HibernateSessionFactoryUtil getInstance() {
+        if (instance == null) {
+            instance = new HibernateSessionFactoryUtil();
+        }
+        return instance;
     }
 }

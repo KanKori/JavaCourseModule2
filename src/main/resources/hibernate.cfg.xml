@@ -5,7 +5,7 @@
 <hibernate-configuration>
     <session-factory>
 
-        <property name="dialect">org.hibernate.dialect.PostgreSQL82Dialect</property>
+        <property name="dialect">org.hibernate.dialect.PostgreSQLDialect</property>
         <property name="connection.url">jdbc:postgresql://localhost:5432/JavaCourse</property>
         <property name="connection.driver_class">org.postgresql.Driver</property>
         <property name="connection.username">postgres</property>
@@ -21,6 +21,7 @@
         <mapping class="com.model.grade.Grade"/>
         <mapping class="com.model.student.Student"/>
         <mapping class="com.model.subject.Subject"/>
+        <mapping class="com.model.group.Group"/>
 
     </session-factory>
 </hibernate-configuration>

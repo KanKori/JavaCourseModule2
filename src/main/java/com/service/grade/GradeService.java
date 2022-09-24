@@ -11,11 +11,18 @@ import java.util.Optional;
 
 public class GradeService extends AbstractCrudService<Grade> {
 
-    GradeRepository gradeRepository;
+    private static GradeService instance;
+    private final GradeRepository gradeRepository = GradeRepository.getInstance();
 
-    public GradeService(GradeRepository repository) {
-        super(repository);
-        this.gradeRepository = repository;
+    public GradeService() {
+        super(GradeRepository.getInstance());
+    }
+
+    public static GradeService getInstance(){
+        if(instance==null){
+            instance = new GradeService();
+        }
+        return instance;
     }
 
     public Grade create(List<Student> students, Subject subject, int value) {

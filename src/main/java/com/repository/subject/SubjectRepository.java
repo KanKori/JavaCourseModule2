@@ -18,14 +18,28 @@ public class SubjectRepository implements ICrudRepository<Subject>, ISubjectRepo
 
     private final SessionFactory sessionFactory = HibernateSessionFactoryUtil.getSessionFactory();
 
-    private final Session session;
-    public SubjectRepository() {
-        session = HibernateSessionFactoryUtil.getSession();
-    }
-
     private static final Random RANDOM = new Random();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SubjectRepository.class);
+
+    private static SubjectRepository instance;
+
+    protected SubjectRepository(SubjectRepository instance) {
+        SubjectRepository.instance = instance;
+    }
+
+    public static SubjectRepository getInstance() {
+        if (instance == null) {
+            instance = new SubjectRepository();
+        }
+        return instance;
+    }
+    private Session session;
+
+    public SubjectRepository() {
+        HibernateSessionFactoryUtil.getInstance();
+        session = HibernateSessionFactoryUtil.getSession();
+    }
 
     public Subject create() {
         return new Subject(RANDOM.nextInt(900),
@@ -35,7 +49,7 @@ public class SubjectRepository implements ICrudRepository<Subject>, ISubjectRepo
     public void save(Subject subject) {
         Session session = sessionFactory.openSession();
         session.beginTransaction();
-        session.save(subject);
+        session.merge(subject);
         session.getTransaction().commit();
         session.close();
     }
@@ -45,7 +59,7 @@ public class SubjectRepository implements ICrudRepository<Subject>, ISubjectRepo
         Session session = sessionFactory.openSession();
         session.beginTransaction();
         for (Subject subject : subjects) {
-            session.save(subject);
+            session.merge(subject);
         }
         session.getTransaction().commit();
         session.close();
@@ -95,7 +109,8 @@ public class SubjectRepository implements ICrudRepository<Subject>, ISubjectRepo
         }
     }
 
-    public Subject getBetterPerformance() {
+    @Override
+    public Subject getBestAvg() {
         String hql = "Select s from Grade g join g.subject s join g.students st_g " +
                 "group by g.subject order by avg(g.value) desc";
         Query<Subject> query = session.createQuery(hql, Subject.class);
@@ -108,7 +123,7 @@ public class SubjectRepository implements ICrudRepository<Subject>, ISubjectRepo
         }
     }
 
-    public Subject getWorstPerformance() {
+    public Subject getWorstAVG() {
         String hql = "Select s from Grade g join g.subject s join g.students st_g " +
                 "group by g.subject order by avg(g.value)";
         Query<Subject> query = session.createQuery(hql, Subject.class);

@@ -9,11 +9,18 @@ import java.util.Optional;
 
 public class SubjectService extends AbstractCrudService<Subject> {
 
-    public SubjectRepository subjectRepository;
+    private static SubjectService instance;
+    private final SubjectRepository subjectRepository = SubjectRepository.getInstance();
 
-    public SubjectService(SubjectRepository repository) {
-        super(repository);
-        this.subjectRepository = repository;
+    public SubjectService(){
+        super(SubjectRepository.getInstance());
+    }
+
+    public static SubjectService getInstance(){
+        if(instance==null){
+            instance = new SubjectService();
+        }
+        return instance;
     }
 
     public Subject create() {
@@ -44,11 +51,11 @@ public class SubjectService extends AbstractCrudService<Subject> {
         subjectRepository.delete(id);
     }
 
-    public Subject getBestPerformance() {
-        return subjectRepository.getBetterPerformance();
+    public Subject getBestAVG() {
+        return subjectRepository.getBestAvg();
     }
 
-    public Subject getWorstPerformance() {
-        return subjectRepository.getWorstPerformance();
+    public Subject getWorstAVG() {
+        return subjectRepository.getWorstAVG();
     }
 }

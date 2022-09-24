@@ -1,49 +1,44 @@
 package com;
 
-import com.model.student.Student;
-import com.model.subject.Subject;
-import com.repository.grade.GradeRepository;
-import com.repository.student.StudentRepository;
-import com.repository.subject.SubjectRepository;
-import com.service.grade.GradeService;
-import com.service.student.StudentService;
-import com.service.subject.SubjectService;
+import com.commands.Commands;
+import com.commands.ICommand;
+import com.config.FlywayConfig;
+import com.config.HibernateSessionFactoryUtil;
+import org.flywaydb.core.Flyway;
 
-import java.util.ArrayList;
-import java.util.List;
+import static com.commands.ICommand.SCANNER;
 
 public class Main {
     public static void main(String[] args) {
+        HibernateSessionFactoryUtil.getSessionFactory();
+        Flyway flyway = FlywayConfig.getInstance();
+        flyway.migrate();
+        HibernateSessionFactoryUtil.getSessionFactory();
+        final Commands[] values = Commands.values();
+        boolean exit;
 
-        StudentRepository studentRepository = new StudentRepository();
-        StudentService studentService = new StudentService(studentRepository);
-        Student student = studentService.create();
-        studentRepository.save(student);
-        Student student2 = studentService.create();
-        studentRepository.save(student2);
-        Student student3 = studentService.create();
-        studentRepository.save(student3);
-        Student student4 = studentService.create();
-        studentRepository.save(student4);
+        do {
+            exit = userAction(values);
+        } while (!exit);
+    }
 
-
-        List<Student> students = new ArrayList<>();
-        students.add(student);
-        students.add(student2);
-        students.add(student3);
-        students.add(student4);
-
-        SubjectRepository subjectRepository = new SubjectRepository();
-        SubjectService subjectService = new SubjectService(subjectRepository);
-        Subject subject = subjectService.create();
-        subjectRepository.save(subject);
-        Subject subject2 = subjectService.create();
-        subjectRepository.save(subject2);
-
-        GradeRepository gradeRepository = new GradeRepository();
-        GradeService gradeService = new GradeService(gradeRepository);
-        gradeService.create(students, subject, 10);
-        gradeService.create(students, subject2, 1);
-
+    private static boolean userAction(final Commands[] values) {
+        int userCommand = -1;
+        do {
+            for (int i = 0; i < values.length; i++) {
+                System.out.printf("%d) %s%n", i, values[i].getName());
+            }
+            int input = SCANNER.nextInt();
+            if (input >= 0 && input < values.length) {
+                userCommand = input;
+            }
+        } while (userCommand == -1);
+        final ICommand command = values[userCommand].getICommand();
+        if (command == null) {
+            return true;
+        } else {
+            command.execute();
+            return false;
+        }
     }
 }

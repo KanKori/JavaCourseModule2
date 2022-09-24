@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -20,8 +21,11 @@ public class Educator {
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private String id;
+    @Column
     private String firstName;
+    @Column
     private String lastName;
+    @Column
     private int age;
     @OneToOne(cascade = CascadeType.PERSIST,
             fetch = FetchType.EAGER)

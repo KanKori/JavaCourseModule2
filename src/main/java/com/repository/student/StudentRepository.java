@@ -23,19 +23,37 @@ public class StudentRepository implements ICrudRepository<Student>, IStudentRepo
 
     private final SessionFactory sessionFactory = HibernateSessionFactoryUtil.getSessionFactory();
 
+    private static StudentRepository instance;
+
+    protected StudentRepository(StudentRepository instance) {
+        StudentRepository.instance = instance;
+    }
+
+    public static StudentRepository getInstance() {
+        if (instance == null) {
+            instance = new StudentRepository();
+        }
+        return instance;
+    }
+    private Session session;
+
+    public StudentRepository() {
+        HibernateSessionFactoryUtil.getInstance();
+        session = HibernateSessionFactoryUtil.getSession();
+    }
     public Student create() {
         return new Student(
                 "FName" + RANDOM.nextInt(100),
                 "LName" + RANDOM.nextInt(100),
-                RANDOM.nextInt((90-16)+16),
+                RANDOM.nextInt( 90 - 16) + 16,
                 LocalDate.now());
     }
 
     @Override
     public void save(Student student) {
-        Session session = sessionFactory.openSession();
+        session = sessionFactory.openSession();
         session.beginTransaction();
-        session.save(student);
+        session.merge(student);
         session.getTransaction().commit();
         session.close();
     }
@@ -45,7 +63,7 @@ public class StudentRepository implements ICrudRepository<Student>, IStudentRepo
         Session session = sessionFactory.openSession();
         session.beginTransaction();
         for (Student student : students) {
-            session.save(student);
+            session.merge(student);
         }
         session.getTransaction().commit();
         session.close();
@@ -61,7 +79,7 @@ public class StudentRepository implements ICrudRepository<Student>, IStudentRepo
 
     @Override
     public Optional<Student> findById(String id) {
-        Session session = sessionFactory.openSession();
+        session = sessionFactory.openSession();
         Optional<Student> student = Optional.ofNullable(session.find(Student.class, id));
         session.close();
         return student;
@@ -96,10 +114,10 @@ public class StudentRepository implements ICrudRepository<Student>, IStudentRepo
     }
 
     @Override
-    public List<Student> findStudentWithGPAHigherThan(double inputGPA, GradeRepository gradeRepository) {
+    public List<Student> findStudentWithGPAHigherThan(double inputGPA) {
         List<Student> result = new ArrayList<>();
-        List<Student> studentsAll = getAll();
-
+        GradeRepository gradeRepository = GradeRepository.getInstance();
+        List<Student> studentsAll = session.createQuery("select student from Student s", Student.class).getResultList();
         for (Student student : studentsAll) {
             double avg = gradeRepository.getStudentGPA(student);
             if (avg > inputGPA) {

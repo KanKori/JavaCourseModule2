@@ -8,10 +8,6 @@ import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,14 +17,30 @@ public class EducatorRepository implements ICrudRepository<Educator>, IEducatorR
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EducatorRepository.class);
 
+    private static EducatorRepository instance;
+
+    protected EducatorRepository(EducatorRepository instance) {
+        EducatorRepository.instance = instance;
+    }
+
+    public static EducatorRepository getInstance() {
+        if (instance == null) {
+            instance = new EducatorRepository();
+        }
+        return instance;
+    }
+    private Session session;
+
     public EducatorRepository() {
+        HibernateSessionFactoryUtil.getInstance();
+        session = HibernateSessionFactoryUtil.getSession();
     }
 
     @Override
     public void save(Educator educator) {
         Session session = sessionFactory.openSession();
         session.beginTransaction();
-        session.save(educator);
+        session.merge(educator);
         session.getTransaction().commit();
         session.close();
     }
@@ -38,7 +50,7 @@ public class EducatorRepository implements ICrudRepository<Educator>, IEducatorR
         Session session = sessionFactory.openSession();
         session.beginTransaction();
         for (Educator educator : educators) {
-            session.save(educator);
+            session.merge(educator);
         }
         session.getTransaction().commit();
         session.close();
@@ -91,17 +103,9 @@ public class EducatorRepository implements ICrudRepository<Educator>, IEducatorR
     @Override
     public List<Educator> findByFirstAndLastName(String firstName, String lastName) {
         Session session = sessionFactory.openSession();
-
-        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-
-        CriteriaQuery<Educator> criteriaQuery = criteriaBuilder.createQuery(Educator.class);
-        Root<Educator> root = criteriaQuery.from(Educator.class);
-
-        criteriaQuery.select(root).where(criteriaBuilder.and(criteriaBuilder.equal(root.get("firstName"), firstName),
-                criteriaBuilder.equal(root.get("lastName"), lastName)));
-        TypedQuery<Educator> query = session.createQuery(criteriaQuery);
-        List<Educator> result = query.getResultList();
-        session.close();
-        return result;
+        return session.createQuery("from Educator e where e.firstName = :firstName or e.lastName = :lastName", Educator.class)
+                .setParameter("firstName", firstName)
+                .setParameter("lastName", lastName)
+                .getResultList();
     }
 }

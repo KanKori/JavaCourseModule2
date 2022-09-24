@@ -6,15 +6,16 @@ import com.model.student.Student;
 import com.repository.ICrudRepository;
 import com.repository.grade.GradeRepository;
 import com.repository.subject.SubjectRepository;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,22 +26,40 @@ public class GroupRepository implements ICrudRepository<Group>, IGroupRepository
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SubjectRepository.class);
+    private static GroupRepository instance;
+
+    protected GroupRepository(GroupRepository instance) {
+        GroupRepository.instance = instance;
+    }
+
+    public static GroupRepository getInstance() {
+        if (instance == null) {
+            instance = new GroupRepository();
+        }
+        return instance;
+    }
+    private Session session;
+
+    public GroupRepository() {
+        HibernateSessionFactoryUtil.getInstance();
+        session = HibernateSessionFactoryUtil.getSession();
+    }
 
     @Override
     public void save(Group group) {
-        Session session = sessionFactory.openSession();
+        session = sessionFactory.openSession();
         session.beginTransaction();
-        session.save(group);
+        session.merge(group);
         session.getTransaction().commit();
         session.close();
     }
 
     @Override
     public void saveAll(List<Group> groups) {
-        Session session = sessionFactory.openSession();
+        session = sessionFactory.openSession();
         session.beginTransaction();
         for (Group group : groups) {
-            session.save(group);
+            session.merge(group);
         }
         session.getTransaction().commit();
         session.close();
@@ -48,7 +67,7 @@ public class GroupRepository implements ICrudRepository<Group>, IGroupRepository
 
     @Override
     public List<Group> getAll() {
-        Session session = sessionFactory.openSession();
+        session = sessionFactory.openSession();
         List<Group> groups = session.createQuery("select group from Group group", Group.class).getResultList();
         session.close();
         return groups;
@@ -93,33 +112,25 @@ public class GroupRepository implements ICrudRepository<Group>, IGroupRepository
     @Override
     public List<Group> findGroupByName(String name) {
         Session session = sessionFactory.openSession();
-
-        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-        CriteriaQuery<Group> criteriaQuery = criteriaBuilder.createQuery(Group.class);
-        Root<Group> root = criteriaQuery.from(Group.class);
-
-        criteriaQuery.select(root).where(criteriaBuilder.like(root.get("name"), "%" + name + "%"));
-        TypedQuery<Group> query = session.createQuery(criteriaQuery);
-        List<Group> groups = query.getResultList();
-
-        session.close();
-        return groups;
+        return session.createQuery("from group g where g.name like :name", Group.class)
+                .setParameter("name", "%" + name + "%")
+                .list();
     }
 
     @Override
     public Map<Group, Integer> getCountStudentInEveryGroup() {
-        List<Group> groups = getAll();
-
-        Map<Group, Integer> result = new LinkedHashMap<>();
-        for (Group group : groups) {
-            int count = group.getStudents().size();
-            result.put(group, count);
+        try (Session session = sessionFactory.openSession()) {
+            List<Object> list = session.createQuery("select s.group.name, count(s.id) from student s group by s.group.name").getResultList();
+            Map<Group, Integer> studentsByGroup = new HashMap<>();
+            list.forEach(pair -> {
+                Object[] o = (Object[]) pair;
+                studentsByGroup.put((Group) o[0], (Integer) o[1]);
+            });
+            return studentsByGroup;
         }
-        return result;
     }
 
-    @Override
-    public Map<Group, Double> getCountGroupsGPA(GradeRepository gradeRepository) {
+    public Map<Group, Double> getCountGroupsGPA() {
         Map<Group, Double> result = new LinkedHashMap<>();
 
         List<Group> groups = getAll();
@@ -129,7 +140,7 @@ public class GroupRepository implements ICrudRepository<Group>, IGroupRepository
             int studentsCount = students.size();
             double totalAvg = 0;
             for (Student student : students) {
-                double avg = gradeRepository.getStudentGPA(student);
+                double avg = GradeRepository.getInstance().getStudentGPA(student);
                 totalAvg += avg;
             }
             double avg = totalAvg / studentsCount;

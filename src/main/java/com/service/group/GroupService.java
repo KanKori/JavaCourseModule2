@@ -1,7 +1,6 @@
 package com.service.group;
 
 import com.model.group.Group;
-import com.repository.grade.GradeRepository;
 import com.repository.group.GroupRepository;
 import com.service.AbstractCrudService;
 
@@ -11,11 +10,18 @@ import java.util.Optional;
 
 public class GroupService extends AbstractCrudService<Group> {
 
-    GroupRepository groupRepository;
+    private static GroupService instance;
+    private final GroupRepository groupRepository = GroupRepository.getInstance();
 
-    public GroupService(GroupRepository repository) {
-        super(repository);
-        this.groupRepository = repository;
+    public GroupService(){
+        super(GroupRepository.getInstance());
+    }
+
+    public static GroupService getInstance(){
+        if(instance == null){
+            instance = new GroupService();
+        }
+        return instance;
     }
 
     public void save(Group group) {
@@ -50,7 +56,7 @@ public class GroupService extends AbstractCrudService<Group> {
         return groupRepository.getCountStudentInEveryGroup();
     }
 
-    public Map<Group, Double> getCountGroupsGPA(GradeRepository gradeRepository) {
-        return groupRepository.getCountGroupsGPA(gradeRepository);
+    public Map<Group, Double> getCountGroupsGPA() {
+        return groupRepository.getCountGroupsGPA();
     }
 }

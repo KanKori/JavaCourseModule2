@@ -11,5 +11,5 @@ public interface IGroupRepository {
 
     Map<Group, Integer> getCountStudentInEveryGroup();
 
-    Map<Group, Double> getCountGroupsGPA(GradeRepository gradeRepository);
+    Map<Group, Double> getCountGroupsGPA();
 }

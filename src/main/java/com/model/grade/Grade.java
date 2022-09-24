@@ -8,8 +8,8 @@ import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -36,6 +36,7 @@ public class Grade {
     private List<Student> students;
     @OneToOne
     private Subject subject;
+    @Column
     private int value;
 
     public Grade(List<Student> students, Subject subject, int value) {
